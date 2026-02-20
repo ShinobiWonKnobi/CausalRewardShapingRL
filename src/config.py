@@ -44,7 +44,7 @@ class FeatureConfig:
 class EnvConfig:
     """Trading environment configuration"""
     initial_balance: float = 100_000.0
-    transaction_cost: float = 0.001  # 0.1% per trade
+    transaction_cost: float = 0.0002  # 0.02% (2 basis points) per trade
     max_drawdown: float = 0.20  # 20% max drawdown terminates episode
     
     # Action space: position in [-1, 1]

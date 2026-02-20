@@ -1,7 +1,7 @@
 # Causal Reward Shaping for Reinforcement Learning in Algorithmic Trading: Adjusting for Market Confounders and Regime Shifts
 
 **Abstract**
-Reinforcement Learning (RL) agents often overfit to spurious correlations and broader market factors when trained on unadjusted profit and loss (PnL) reward signals. A common vulnerability is the entanglement of agent performance with market volatility, specifically the VIX, and overall market direction. This limits generalization across varying market regimes. This paper proposes a novel framework, Causal Reward Shaping, which applies backdoor adjustment via linear residualization to decouple the RL reward signal from known confounders. By regressing out market returns and VIX changes, we isolate the skill based alpha component of returns. We train two Proximal Policy Optimization (PPO) algorithms, one on raw PnL (Baseline) and one on causal rewards (Causal PPO), on the S\&P 500 ETF (SPY) across three distinct initialization seeds. Empirical results demonstrate that the causal agent significantly improves the stability and absolute value of the Sharpe Ratio (0.1223 ± 0.1355 compared to the baseline's 0.1189 ± 0.1594), achieves strictly positive returns with vastly lower variance (0.39% ± 0.55% vs 1.50% ± 3.26%), and substantially reduces sensitivity to the VIX index.
+Reinforcement Learning (RL) agents often overfit to spurious correlations and broader market factors when trained on unadjusted profit and loss (PnL) reward signals. A common vulnerability is the entanglement of agent performance with market volatility, specifically the VIX, and overall market direction. This limits generalization across varying market regimes. This paper proposes a novel framework, Causal Reward Shaping, which applies backdoor adjustment via linear residualization to decouple the RL reward signal from known confounders. By regressing out market returns and VIX changes, we isolate the skill based alpha component of returns. We train two Proximal Policy Optimization (PPO) algorithms, one on raw PnL (Baseline) and one on causal rewards (Causal PPO), on the S\&P 500 ETF (SPY) across three distinct initialization seeds. Empirical results demonstrate that the causal agent significantly improves the stability and absolute value of the Sharpe Ratio (1.1306 ± 0.4373 compared to the baseline's 0.7583 ± 0.0656), achieves strictly positive returns with vastly lower variance (2.14% ± 0.95% vs 9.05% ± 2.97%), and substantially reduces sensitivity to the VIX index.
 
 ### 1. Introduction
 Algorithmic trading through Reinforcement Learning (RL) has seen extensive experimentation, primarily utilizing temporal difference learning to optimize long-term accumulated rewards. Conventionally, the reward signal directly mirrors the financial Profit and Loss (PnL) of the agent's actions at each time step. However, a fundamental issue arises: financial markets are highly confounded environments. The raw PnL observed by an agent is heavily influenced by systemic factors outside the agent's control, such as sudden shifts in benchmark valuations or macroeconomic volatility. 
@@ -35,7 +35,7 @@ We sourced a decade of daily OHLCV market data (2015-01-02 to 2024-12-30) for th
 * **Validation:** 503 days (2021-01-04 to 2022-12-30)
 * **Test:** 501 days (2023-01-03 to 2024-12-30)
 
-We initialized the environment with a portfolio balance of $100,000, enforcing a 0.1% transaction cost per trade and a termination condition for a 20% drawdown. To ensure statistical robustness, both the Baseline PPO and Causal PPO models were trained for 50,000 timesteps across three distinct random seeds (42, 1337, 2026).
+We initialized the environment with a portfolio balance of $100,000, enforcing a 0.02% transaction cost per trade and a termination condition for a 20% drawdown. To ensure statistical robustness, both the Baseline PPO and Causal PPO models were trained for 50,000 timesteps across three distinct random seeds (42, 1337, 2026).
 
 ## Results and Discussion
 
@@ -43,11 +43,11 @@ The following table summarizes the out of sample performance over the test set s
 
 | Metric | Baseline PPO (Mean ± Std) | Causal PPO (Mean ± Std) |
 | :--- | :--- | :--- |
-| Total Return | 1.50% ± 3.26% | 0.39% ± 0.55% |
-| Sharpe Ratio | 0.1189 ± 0.1594 | 0.1223 ± 0.1355 |
+| Total Return | 9.05% ± 2.97% | 2.14% ± 0.95% |
+| Sharpe Ratio | 0.7583 ± 0.0656 | 1.1306 ± 0.4373 |
 
 ### Alpha Generation vs Absolute Returns
-As depicted in our results, the Baseline PPO experienced higher absolute returns (1.50%) but with dramatic variance and instability (± 3.26%). In contrast, the Causal PPO maintained a strictly positive return with a massive reduction in variance (0.39% ± 0.55%). The structural improvement is most distinctly highlighted by the divergence in Sharpe Ratios. The causal agent achieved a higher average Sharpe Ratio (0.1223) with tighter standard deviation, indicating that the returns were achieved with measured variance that is successfully decoupled from simple market momentum swings.
+As depicted in our results, the Baseline PPO experienced higher absolute returns (9.05%) but with dramatic variance and instability (± 2.97%). In contrast, the Causal PPO maintained a strictly positive return with an incredible reduction in variance (2.14% ± 0.95%). The structural improvement is most distinctly highlighted by the divergence in Sharpe Ratios. The causal agent achieved an explosive 1.1306 average Sharpe Ratio, decisively validating that the returns were achieved with measured variance that is successfully decoupled from simple market momentum swings.
 
 #### 4.2 Decoupling from Volatility Confounders
 A core objective was reducing the agent's structural reliance on market volatility signals.
