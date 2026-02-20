@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Causal Reward Shaping for RL Trading: Technical Documentation</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+        :root {
+            --primary: #0f172a;
+            --secondary: #1e293b;
+            --accent: #0ea5e9;
+            --accent-light: #38bdf8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --text: #334155;
+            --text-light: #64748b;
+            --bg: #ffffff;
+            --bg-alt: #f8fafc;
+            --border: #e2e8f0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            line-height: 1.6;
+            color: var(--text);
+            background: var(--bg);
+            font-size: 14px;
+        }
+
+        .doc-header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+            border-bottom: 4px solid var(--accent);
+        }
+
+        .doc-header h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .doc-header .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+
+        .meta {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .section {
+            margin-bottom: 3rem;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--accent);
+            font-weight: 600;
+        }
+
+        h3 {
+            font-size: 1.2rem;
+            color: var(--primary);
+            margin: 1.5rem 0 0.75rem;
+            font-weight: 600;
+        }
+
+        h4 {
+            font-size: 1rem;
+            color: var(--text);
+            margin: 1.25rem 0 0.5rem;
+            font-weight: 600;
+        }
+
+        p {
+            margin-bottom: 1rem;
+            text-align: justify;
+        }
+
+        .toc {
+            background: var(--bg-alt);
+            padding: 2rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            margin-bottom: 2rem;
+        }
+
+        .toc h3 {
+            margin-top: 0;
+        }
+
+        .toc ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .toc li {
+            padding: 0.4rem 0;
+            border-bottom: 1px dotted var(--border);
+        }
+
+        .toc a {
+            color: var(--text);
+            text-decoration: none;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .toc a:hover {
+            color: var(--accent);
+        }
+
+        .highlight-box {
+            background: #f0fdf4;
+            border-left: 4px solid var(--success);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .warning-box {
+            background: #fffbeb;
+            border-left: 4px solid var(--warning);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            font-size: 0.9rem;
+        }
+
+        th {
+            background: var(--primary);
+            color: white;
+            padding: 0.75rem;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        tr:nth-child(even) {
+            background: var(--bg-alt);
+        }
+
+        .code-block {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+            line-height: 1.5;
+        }
+
+        .code-comment {
+            color: #64748b;
+        }
+
+        .code-keyword {
+            color: #c084fc;
+        }
+
+        .code-string {
+            color: #4ade80;
+        }
+
+        .data-card {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            background: white;
+        }
+
+        .data-card h4 {
+            margin-top: 0;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.5rem;
+        }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px dotted var(--border);
+        }
+
+        .metric-label {
+            font-weight: 500;
+        }
+
+        .metric-value {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent);
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .comparison-card {
+            background: var(--bg-alt);
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .comparison-card h5 {
+            margin: 0 0 0.5rem 0;
+            color: var(--primary);
+        }
+
+        .alt-idea {
+            background: var(--bg-alt);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .alt-idea h4 {
+            margin-top: 0;
+            color: var(--accent);
+        }
+
+        /* Architecture Diagram Styles */
+        .arch-container {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+            border: 2px solid var(--border);
+        }
+
+        .arch-title {
+            text-align: center;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 2rem;
+        }
+
+        .arch-flow {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .arch-row {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+
+        .arch-box {
+            background: white;
+            border-radius: 10px;
+            padding: 1rem 1.5rem;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 2px solid var(--border);
+            min-width: 140px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .arch-box:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .arch-box.data {
+            border-color: var(--warning);
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+        }
+
+        .arch-box.process {
+            border-color: var(--accent);
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+        }
+
+        .arch-box.rl {
+            border-color: var(--success);
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+        }
+
+        .arch-box.output {
+            border-color: #8b5cf6;
+            background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
+        }
+
+        .arch-box-icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .arch-box-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .arch-box-desc {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .arch-arrow {
+            color: var(--text-light);
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .arch-section {
+            width: 100%;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 0.5rem 0;
+        }
+
+        .arch-section.input {
+            background: rgba(245, 158, 11, 0.1);
+            border-left: 4px solid var(--warning);
+        }
+
+        .arch-section.causal {
+            background: rgba(14, 165, 233, 0.1);
+            border-left: 4px solid var(--accent);
+        }
+
+        .arch-section.training {
+            background: rgba(16, 185, 129, 0.1);
+            border-left: 4px solid var(--success);
+        }
+
+        .arch-section-label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-light);
+            margin-bottom: 0.75rem;
+        }
+
+        /* Data Pipeline Visual */
+        .data-pipeline {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bg-alt);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+            overflow-x: auto;
+        }
+
+        .pipeline-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 100px;
+        }
+
+        .pipeline-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .pipeline-icon.source {
+            background: #fef3c7;
+        }
+
+        .pipeline-icon.process {
+            background: #e0f2fe;
+        }
+
+        .pipeline-icon.feature {
+            background: #dcfce7;
+        }
+
+        .pipeline-icon.output {
+            background: #f3e8ff;
+        }
+
+        .pipeline-label {
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .pipeline-arrow {
+            font-size: 1.5rem;
+            color: var(--text-light);
+            margin: 0 0.5rem;
+        }
+
+        /* Feature Grid */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .feature-item {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        .feature-item h5 {
+            margin: 0 0 0.5rem 0;
+            color: var(--primary);
+            font-size: 0.9rem;
+        }
+
+        .feature-item p {
+            margin: 0;
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+
+        .feature-item .formula {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            background: var(--bg-alt);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            margin-top: 0.5rem;
+            display: inline-block;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 1.25rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .comparison-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .arch-row {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="doc-header">
+        <h1>Causal Reward Shaping for RL Trading</h1>
+        <div class="subtitle">Confounder-Adjusted Rewards for Regime-Robust Policy Learning</div>
+        <div class="subtitle" style="margin-top: 0.5rem; font-size: 0.95rem;">Minor Project Documentation</div>
+        <div class="meta">
+            <span>Version 2.0 (Simplified)</span>
+            <span>|</span>
+            <span>February 2026</span>
+        </div>
+    </div>
+
+    <div class="container">
+
+        <div class="toc">
+            <h3>Table of Contents</h3>
+            <ul>
+                <li><a href="#overview">1. Project Overview & Hypothesis</a></li>
+                <li><a href="#method">2. Methodology</a></li>
+                <li><a href="#data">3. Data & Features</a></li>
+                <li><a href="#implementation">4. Implementation Plan</a></li>
+                <li><a href="#experiments">5. Experiments & Expected Results</a></li>
+                <li><a href="#alternatives">6. Alternative Project Ideas</a></li>
+            </ul>
+        </div>
+
+        <section id="overview" class="section">
+            <h2>1. Project Overview & Hypothesis</h2>
+
+            <h3>1.1 The Problem</h3>
+            <p>
+                Standard Reinforcement Learning agents for stock trading learn from raw profit/loss (PnL) rewards.
+                However, these rewards are <strong>confounded</strong> by market-wide factors like volatility (VIX) and
+                overall market direction. An agent might learn to associate "high returns" with "low VIX" rather than
+                learning a genuinely profitable strategy.
+            </p>
+
+            <div class="warning-box">
+                <strong>The Confounding Problem:</strong> If VIX is low → market goes up → agent's long position
+                profits.
+                The agent learns "VIX predicts my reward" instead of learning actual trading skill. When VIX patterns
+                change
+                (regime shift), the policy fails.
+            </div>
+
+            <h3>1.2 Our Solution</h3>
+            <p>
+                We propose <strong>Causal Reward Shaping</strong>: adjusting the RL reward signal to remove the effect
+                of
+                known confounders (VIX, market beta) before training. This forces the agent to learn from "alpha"
+                (skill-based returns) rather than "beta" (market exposure).
+            </p>
+
+            <div class="highlight-box">
+                <strong>Core Idea:</strong> Instead of reward = PnL, use reward = PnL - β × Market Return - γ × VIX
+                Effect<br>
+                This is called <strong>residualized reward</strong> — the leftover signal after removing confounders.
+            </div>
+
+            <h3>1.3 Research Hypothesis</h3>
+            <p><strong>H1:</strong> An RL agent trained with confounder-adjusted rewards will exhibit more stable
+                performance across different market regimes (bull/bear/sideways) compared to an agent trained with raw
+                rewards.</p>
+
+            <p><strong>H2:</strong> The adjusted-reward agent will have lower "performance variance" between
+                high-volatility
+                and low-volatility periods.</p>
+        </section>
+
+        <section id="method" class="section">
+            <h2>2. Methodology</h2>
+
+            <h3>2.1 Conceptual Framework</h3>
+
+            <div class="comparison-grid">
+                <div class="comparison-card">
+                    <h5>❌ Standard RL (Baseline)</h5>
+                    <p>Reward = Raw PnL</p>
+                    <p>Problem: Confounded by market factors</p>
+                    <p>Result: Overfits to VIX correlation</p>
+                </div>
+                <div class="comparison-card">
+                    <h5>✅ Causal RL (Ours)</h5>
+                    <p>Reward = Residualized PnL</p>
+                    <p>Solution: Remove beta and VIX effect</p>
+                    <p>Result: Learns genuine alpha</p>
+                </div>
+            </div>
+
+            <h3>2.2 Reward Calibration Formula</h3>
+
+            <p>We use a simple linear adjustment (backdoor adjustment approximation):</p>
+
+            <div class="code-block">
+                <span class="code-comment"># Reward Calibration</span>
+
+                <span class="code-keyword">Step 1:</span> Estimate confounder effects via regression
+                PnL_t = α + β₁ × MarketReturn_t + β₂ × ΔVIX_t + ε_t
+
+                <span class="code-keyword">Step 2:</span> Compute residualized reward
+                CausalReward_t = PnL_t - β̂₁ × MarketReturn_t - β̂₂ × ΔVIX_t
+
+                <span class="code-keyword">Step 3:</span> Train PPO with CausalReward instead of PnL
+            </div>
+
+            <h3>2.3 Why This Works</h3>
+            <p>
+                By regressing out the market return and VIX change, we isolate the portion of PnL that is
+                <em>independent</em> of these confounders. This is the agent's "skill" — what remains after
+                accounting for market-wide movements.
+            </p>
+
+            <h3>2.4 Theoretical Justification</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Concept</th>
+                        <th>Reference</th>
+                        <th>How We Use It</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Backdoor Adjustment</td>
+                        <td>Pearl (2009), Causality</td>
+                        <td>Adjusting for VIX as a confounder</td>
+                    </tr>
+                    <tr>
+                        <td>Residualization</td>
+                        <td>Frisch-Waugh-Lovell Theorem</td>
+                        <td>Linear regression to remove effects</td>
+                    </tr>
+                    <tr>
+                        <td>Reward Shaping in RL</td>
+                        <td>Ng et al. (1999)</td>
+                        <td>Modified rewards preserve optimal policy</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>2.5 System Architecture</h3>
+
+            <div class="arch-container">
+                <div class="arch-title">🏗️ Causal Reward Shaping Pipeline</div>
+
+                <div class="arch-flow">
+                    <!-- Input Layer -->
+                    <div class="arch-section input">
+                        <div class="arch-section-label">📥 Data Input Layer</div>
+                        <div class="arch-row">
+                            <div class="arch-box data">
+                                <div class="arch-box-icon">📈</div>
+                                <div class="arch-box-title">Yahoo Finance</div>
+                                <div class="arch-box-desc">SPY OHLCV</div>
+                            </div>
+                            <div class="arch-box data">
+                                <div class="arch-box-icon">📊</div>
+                                <div class="arch-box-title">VIX Index</div>
+                                <div class="arch-box-desc">Volatility</div>
+                            </div>
+                            <div class="arch-box data">
+                                <div class="arch-box-icon">⚙️</div>
+                                <div class="arch-box-title">Feature Engine</div>
+                                <div class="arch-box-desc">RSI, MACD, Vol</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="arch-arrow">↓</div>
+
+                    <!-- Causal Layer -->
+                    <div class="arch-section causal">
+                        <div class="arch-section-label">🔬 Causal Processing Layer</div>
+                        <div class="arch-row">
+                            <div class="arch-box process">
+                                <div class="arch-box-icon">🎯</div>
+                                <div class="arch-box-title">Trading Env</div>
+                                <div class="arch-box-desc">Gymnasium API</div>
+                            </div>
+                            <div class="arch-box process">
+                                <div class="arch-box-icon">📉</div>
+                                <div class="arch-box-title">Raw Reward</div>
+                                <div class="arch-box-desc">PnL Signal</div>
+                            </div>
+                            <div class="arch-box process">
+                                <div class="arch-box-icon">🧮</div>
+                                <div class="arch-box-title">OLS Calibrator</div>
+                                <div class="arch-box-desc">β estimation</div>
+                            </div>
+                            <div class="arch-box process">
+                                <div class="arch-box-icon">✨</div>
+                                <div class="arch-box-title">Causal Reward</div>
+                                <div class="arch-box-desc">PnL - βZ</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="arch-arrow">↓</div>
+
+                    <!-- RL Layer -->
+                    <div class="arch-section training">
+                        <div class="arch-section-label">🤖 Reinforcement Learning Layer</div>
+                        <div class="arch-row">
+                            <div class="arch-box rl">
+                                <div class="arch-box-icon">🧠</div>
+                                <div class="arch-box-title">PPO Agent</div>
+                                <div class="arch-box-desc">Actor-Critic</div>
+                            </div>
+                            <div class="arch-box rl">
+                                <div class="arch-box-icon">🎲</div>
+                                <div class="arch-box-title">Policy π(a|s)</div>
+                                <div class="arch-box-desc">MLP [64, 64]</div>
+                            </div>
+                            <div class="arch-box rl">
+                                <div class="arch-box-icon">📐</div>
+                                <div class="arch-box-title">Value V(s)</div>
+                                <div class="arch-box-desc">Critic Network</div>
+                            </div>
+                            <div class="arch-box output">
+                                <div class="arch-box-icon">💹</div>
+                                <div class="arch-box-title">Trading Signal</div>
+                                <div class="arch-box-desc">Position [-1,1]</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h4>Component Details</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Component</th>
+                        <th>Implementation</th>
+                        <th>Key Parameters</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>TradingEnv</strong></td>
+                        <td>Gymnasium environment with continuous action space</td>
+                        <td>Action: [-1, 1], Cost: 0.1%, Max DD: 20%</td>
+                    </tr>
+                    <tr>
+                        <td><strong>RewardCalibrator</strong></td>
+                        <td>Rolling OLS regression on 60-day window</td>
+                        <td>Updates every 20 steps, 2 confounders</td>
+                    </tr>
+                    <tr>
+                        <td><strong>PPO Agent</strong></td>
+                        <td>Stable-Baselines3 with MLP policy</td>
+                        <td>LR: 3e-4, Batch: 64, Epochs: 10</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section id="data" class="section">
+            <h2>3. Data & Features</h2>
+
+            <h3>3.1 Data Overview</h3>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-value">~2,500</div>
+                    <div class="stat-label">Trading Days</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value">10 yrs</div>
+                    <div class="stat-label">Date Range</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value">14</div>
+                    <div class="stat-label">Features</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value">2</div>
+                    <div class="stat-label">Confounders</div>
+                </div>
+            </div>
+
+            <h3>3.2 Data Pipeline</h3>
+
+            <div class="data-pipeline">
+                <div class="pipeline-step">
+                    <div class="pipeline-icon source">📡</div>
+                    <div class="pipeline-label">Yahoo Finance<br><small>yfinance API</small></div>
+                </div>
+                <div class="pipeline-arrow">→</div>
+                <div class="pipeline-step">
+                    <div class="pipeline-icon source">📊</div>
+                    <div class="pipeline-label">Raw OHLCV<br><small>SPY + VIX</small></div>
+                </div>
+                <div class="pipeline-arrow">→</div>
+                <div class="pipeline-step">
+                    <div class="pipeline-icon process">🔧</div>
+                    <div class="pipeline-label">Preprocessing<br><small>Align, Clean</small></div>
+                </div>
+                <div class="pipeline-arrow">→</div>
+                <div class="pipeline-step">
+                    <div class="pipeline-icon feature">📐</div>
+                    <div class="pipeline-label">Features<br><small>RSI, MACD</small></div>
+                </div>
+                <div class="pipeline-arrow">→</div>
+                <div class="pipeline-step">
+                    <div class="pipeline-icon output">📈</div>
+                    <div class="pipeline-label">Normalized<br><small>Z-score</small></div>
+                </div>
+            </div>
+
+            <h3>3.3 Data Sources</h3>
+
+            <div class="comparison-grid">
+                <div class="data-card">
+                    <h4>📈 SPY (Primary Asset)</h4>
+                    <div class="metric-row">
+                        <span class="metric-label">Description</span>
+                        <span class="metric-value">S&P 500 ETF</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Data Fields</span>
+                        <span class="metric-value">Open, High, Low, Close, Volume</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Frequency</span>
+                        <span class="metric-value">Daily (1D)</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Role</span>
+                        <span class="metric-value">Trading target</span>
+                    </div>
+                </div>
+                <div class="data-card">
+                    <h4>📊 VIX (Confounder)</h4>
+                    <div class="metric-row">
+                        <span class="metric-label">Description</span>
+                        <span class="metric-value">CBOE Volatility Index</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Data Fields</span>
+                        <span class="metric-value">Close (implied vol)</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Frequency</span>
+                        <span class="metric-value">Daily (1D)</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Role</span>
+                        <span class="metric-value">Confounder for calibration</span>
+                    </div>
+                </div>
+            </div>
+
+            <h3>3.4 Feature Engineering</h3>
+
+            <p>Features are grouped into four categories based on their role in the causal model:</p>
+
+            <div class="feature-grid">
+                <div class="feature-item">
+                    <h5>📉 Returns (3 features)</h5>
+                    <p>Price momentum at multiple horizons</p>
+                    <span class="formula">r_t = (P_t - P_{t-n}) / P_{t-n}</span>
+                </div>
+                <div class="feature-item">
+                    <h5>📊 Volatility (1 feature)</h5>
+                    <p>20-day annualized realized volatility</p>
+                    <span class="formula">σ = std(r) × √252</span>
+                </div>
+                <div class="feature-item">
+                    <h5>📈 RSI (1 feature)</h5>
+                    <p>Relative Strength Index (14-day)</p>
+                    <span class="formula">RSI = 100 - 100/(1+RS)</span>
+                </div>
+                <div class="feature-item">
+                    <h5>〰️ MACD (3 features)</h5>
+                    <p>Trend momentum indicator</p>
+                    <span class="formula">MACD, Signal, Histogram</span>
+                </div>
+                <div class="feature-item">
+                    <h5>📏 Bollinger (1 feature)</h5>
+                    <p>Position within Bollinger Bands</p>
+                    <span class="formula">BB_pos ∈ [0, 1]</span>
+                </div>
+                <div class="feature-item">
+                    <h5>⚡ VIX Features (3 features)</h5>
+                    <p>Level, change, and SMA ratio</p>
+                    <span class="formula">VIX, ΔVIX, VIX/SMA₂₀</span>
+                </div>
+                <div class="feature-item">
+                    <h5>💼 Position (1 feature)</h5>
+                    <p>Current agent position</p>
+                    <span class="formula">pos ∈ [-1, 1]</span>
+                </div>
+                <div class="feature-item">
+                    <h5>💰 PnL % (1 feature)</h5>
+                    <p>Current episode return</p>
+                    <span class="formula">(B_t - B_0) / B_0</span>
+                </div>
+            </div>
+
+            <h3>3.5 Confounders for Calibration</h3>
+
+            <div class="warning-box">
+                <strong>These variables are used to adjust rewards, NOT as agent inputs:</strong>
+                <ul style="margin-top: 0.5rem; margin-left: 1.5rem;">
+                    <li><strong>Market Return (β₁):</strong> SPY daily return — captures market-wide movement</li>
+                    <li><strong>VIX Change (β₂):</strong> Daily VIX change — captures volatility regime shifts</li>
+                </ul>
+            </div>
+
+            <h3>3.6 Data Splits & Market Regimes</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Split</th>
+                        <th>Period</th>
+                        <th>Days</th>
+                        <th>Key Market Events</th>
+                        <th>Purpose</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Train</strong></td>
+                        <td>2015-01 to 2020-12</td>
+                        <td>~1,500</td>
+                        <td>2015 China crisis, 2018 vol spike, COVID crash</td>
+                        <td>RL training with diverse regimes</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Validation</strong></td>
+                        <td>2021-01 to 2022-12</td>
+                        <td>~500</td>
+                        <td>2021 melt-up, 2022 bear market</td>
+                        <td>Hyperparameter tuning</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Test</strong></td>
+                        <td>2023-01 to 2024-12</td>
+                        <td>~500</td>
+                        <td>2023 AI rally, 2024 rate uncertainty</td>
+                        <td>Final out-of-sample evaluation</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>3.7 Normalization</h3>
+            <p>All features (except raw confounders) are normalized using <strong>rolling z-score</strong> with a 60-day
+                lookback window:</p>
+            <div class="code-block">
+                z_t = (x_t - μ₆₀) / (σ₆₀ + ε)
+
+                <span class="code-comment"># Where:</span>
+                <span class="code-comment"># μ₆₀ = 60-day rolling mean</span>
+                <span class="code-comment"># σ₆₀ = 60-day rolling std</span>
+                <span class="code-comment"># ε = 1e-8 (numerical stability)</span>
+            </div>
+        </section>
+
+        <section id="implementation" class="section">
+            <h2>4. Implementation Plan</h2>
+
+            <h3>4.1 Timeline (6 Weeks)</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Week</th>
+                        <th>Task</th>
+                        <th>Deliverable</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Week 1</strong></td>
+                        <td>Environment Setup</td>
+                        <td>Data pipeline, Gymnasium trading env, feature engineering</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Week 2</strong></td>
+                        <td>Baseline PPO</td>
+                        <td>Working PPO agent with raw rewards</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Week 3</strong></td>
+                        <td>Reward Calibrator</td>
+                        <td>Linear regression module, residualized reward wrapper</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Week 4</strong></td>
+                        <td>Causal PPO Training</td>
+                        <td>Train agent with calibrated rewards</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Week 5</strong></td>
+                        <td>Experiments</td>
+                        <td>Regime analysis, robustness tests, ablations</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Week 6</strong></td>
+                        <td>Paper & Demo</td>
+                        <td>Research paper draft, Gradio dashboard</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>4.2 Architecture</h3>
+
+            <div class="code-block">
+                <span class="code-comment"># System Architecture (Simplified)</span>
+
+                ┌─────────────────┐ ┌──────────────────┐ ┌─────────────────┐
+                │ Market Data │ ──▶ │ Feature Engineer │ ──▶ │ Gym Env │
+                │ (SPY, VIX) │ │ (RSI, Vol, etc.) │ │ (TradingEnv) │
+                └─────────────────┘ └──────────────────┘ └────────┬────────┘
+                │
+                ▼
+                ┌─────────────────┐ ┌──────────────────┐ ┌─────────────────┐
+                │ PPO Agent │ ◀── │ Reward Wrapper │ ◀── │ Raw Reward │
+                │ (Stable-B3) │ │ (Calibrator) │ │ (PnL) │
+                └─────────────────┘ └──────────────────┘ └─────────────────┘
+            </div>
+
+            <h3>4.3 Key Code Components</h3>
+
+            <div class="code-block">
+                <span class="code-comment"># reward_calibrator.py</span>
+
+                <span class="code-keyword">class</span> RewardCalibrator:
+                <span class="code-keyword">def</span> __init__(self, lookback=60):
+                self.lookback = lookback
+                self.beta_market = <span class="code-string">None</span>
+                self.beta_vix = <span class="code-string">None</span>
+
+                <span class="code-keyword">def</span> fit(self, pnl, market_ret, vix_change):
+                <span class="code-string">"""Estimate confounder coefficients via OLS"""</span>
+                X = np.column_stack([market_ret, vix_change])
+                self.betas = np.linalg.lstsq(X, pnl, rcond=<span class="code-string">None</span>)[0]
+
+                <span class="code-keyword">def</span> calibrate(self, raw_reward, market_ret, vix_change):
+                <span class="code-string">"""Return residualized reward"""</span>
+                adjustment = self.betas[0] * market_ret + self.betas[1] * vix_change
+                <span class="code-keyword">return</span> raw_reward - adjustment
+            </div>
+
+            <h3>4.4 Dependencies</h3>
+
+            <div class="code-block">
+                <span class="code-comment"># requirements.txt</span>
+                stable-baselines3==2.3.0 <span class="code-comment"># PPO implementation</span>
+                gymnasium==0.29.1 <span class="code-comment"># Environment API</span>
+                torch==2.1.0 <span class="code-comment"># Neural networks</span>
+                yfinance==0.2.28 <span class="code-comment"># Market data</span>
+                pandas==2.0.0 <span class="code-comment"># Data manipulation</span>
+                ta==0.10.2 <span class="code-comment"># Technical indicators</span>
+                scikit-learn==1.3.0 <span class="code-comment"># Regression for calibration</span>
+                gradio==4.0.0 <span class="code-comment"># Demo dashboard</span>
+            </div>
+        </section>
+
+        <section id="experiments" class="section">
+            <h2>5. Experiments & Expected Results</h2>
+
+            <h3>5.1 Experiment Design</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Experiment</th>
+                        <th>Description</th>
+                        <th>Metrics</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>E1: Baseline Comparison</strong></td>
+                        <td>Compare Raw-PPO vs Causal-PPO on test set</td>
+                        <td>Sharpe, Total Return, Max Drawdown</td>
+                    </tr>
+                    <tr>
+                        <td><strong>E2: Regime Robustness</strong></td>
+                        <td>Evaluate performance in bull vs bear vs sideways markets</td>
+                        <td>Performance variance across regimes</td>
+                    </tr>
+                    <tr>
+                        <td><strong>E3: VIX Sensitivity</strong></td>
+                        <td>Measure correlation between agent returns and VIX</td>
+                        <td>Correlation coefficient (should be lower for Causal-PPO)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>E4: Ablation</strong></td>
+                        <td>Remove market adjustment vs VIX adjustment</td>
+                        <td>Which confounder matters more?</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>5.2 Expected Results</h3>
+
+            <div class="highlight-box">
+                <strong>Primary Expected Outcome:</strong><br>
+                Causal-PPO should show <strong>lower variance in Sharpe ratio across regimes</strong> compared to
+                Raw-PPO.
+                Even if absolute returns are similar, the consistency improvement is the key contribution.
+            </div>
+
+            <h3>5.3 Paper Outline</h3>
+
+            <ol style="margin-left: 1.5rem;">
+                <li><strong>Introduction:</strong> Problem of confounded rewards in RL trading</li>
+                <li><strong>Related Work:</strong> Reward shaping, causal RL, trading agents</li>
+                <li><strong>Method:</strong> Residualized reward via backdoor adjustment</li>
+                <li><strong>Experiments:</strong> Baseline comparison, regime analysis, ablations</li>
+                <li><strong>Results:</strong> Tables and figures showing robustness gains</li>
+                <li><strong>Discussion:</strong> Limitations, future work (more confounders, non-linear adjustment)</li>
+                <li><strong>Conclusion:</strong> Simple causal adjustment improves RL robustness</li>
+            </ol>
+        </section>
+
+        <section id="alternatives" class="section">
+            <h2>6. Alternative Project Ideas</h2>
+
+            <p>If the above project doesn't fit your constraints, here are other options ranked by difficulty:</p>
+
+            <div class="alt-idea">
+                <h4>🟢 Option C: Benchmark RL Algorithms for Trading (Easiest)</h4>
+                <p><strong>Idea:</strong> Systematic comparison of PPO vs A2C vs DQN vs SAC on stock trading task.</p>
+                <p><strong>Work:</strong> Use Stable-Baselines3, same environment, compare 4 algorithms.</p>
+                <p><strong>Paper Angle:</strong> "Which RL algorithm works best for daily trading? An empirical study."
+                </p>
+                <p><strong>Pros:</strong> Very straightforward, guaranteed results (comparison always publishable).</p>
+                <p><strong>Cons:</strong> Less novel, more like a survey/benchmark paper.</p>
+                <p><strong>Time:</strong> 4-5 weeks</p>
+            </div>
+
+            <div class="alt-idea">
+                <h4>🟡 Option D: Sentiment-Augmented RL Trading (Medium)</h4>
+                <p><strong>Idea:</strong> Add news sentiment as a feature to RL trading agent.</p>
+                <p><strong>Work:</strong> Use pre-trained FinBERT to score headlines, add to state space.</p>
+                <p><strong>Paper Angle:</strong> "Does sentiment improve RL trading? An ablation study."</p>
+                <p><strong>Pros:</strong> Trendy (NLP + RL), clear hypothesis.</p>
+                <p><strong>Cons:</strong> Need to collect/process news data, sentiment may not help much.</p>
+                <p><strong>Time:</strong> 5-6 weeks</p>
+            </div>
+
+            <div class="alt-idea">
+                <h4>🟡 Option E: Multi-Asset Portfolio RL (Medium)</h4>
+                <p><strong>Idea:</strong> Train RL agent to allocate across 5-10 ETFs instead of single stock.</p>
+                <p><strong>Work:</strong> Modify action space to output allocation weights, add portfolio constraints.
+                </p>
+                <p><strong>Paper Angle:</strong> "RL for portfolio optimization: Beating mean-variance."</p>
+                <p><strong>Pros:</strong> More realistic, good comparison to classical methods.</p>
+                <p><strong>Cons:</strong> Larger state/action space, harder to train.</p>
+                <p><strong>Time:</strong> 6-7 weeks</p>
+            </div>
+
+            <div class="alt-idea">
+                <h4>🔴 Option F: Explainable RL Trading with Attention (Harder)</h4>
+                <p><strong>Idea:</strong> Use attention mechanism in policy network, visualize what features agent
+                    focuses on.</p>
+                <p><strong>Work:</strong> Custom policy network with attention, gradient-based explanations.</p>
+                <p><strong>Paper Angle:</strong> "What does the RL agent see? Attention analysis for trading."</p>
+                <p><strong>Pros:</strong> Novel and interesting, explainability is hot topic.</p>
+                <p><strong>Cons:</strong> Requires custom network architecture, harder to debug.</p>
+                <p><strong>Time:</strong> 7-8 weeks</p>
+            </div>
+        </section>
+
+        <section
+            style="margin-top: 4rem; padding-top: 2rem; border-top: 2px solid var(--border); text-align: center; color: var(--text-light); font-size: 0.9rem;">
+            <p>Causal Reward Shaping for RL Trading | Minor Project Documentation v2.0</p>
+            <p style="margin-top: 0.5rem;">Simplified scope for research feasibility</p>
+        </section>
+
+    </div>
+
+</body>
+
+</html>
