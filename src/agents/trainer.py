@@ -36,8 +36,9 @@ class TradingMetricsCallback(BaseCallback):
                     self.logger.record('trading/drawdown', info['drawdown'])
                 if 'calibrator_coeffs' in info:
                     coeffs = info['calibrator_coeffs']
-                    if coeffs.get('fitted', False):
+                    if 'beta_market' in coeffs:
                         self.logger.record('calibrator/beta_market', coeffs['beta_market'])
+                    if 'beta_vix' in coeffs:
                         self.logger.record('calibrator/beta_vix', coeffs['beta_vix'])
         return True
 

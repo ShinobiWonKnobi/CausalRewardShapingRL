@@ -16,10 +16,11 @@ class RewardCalibrator:
     """
     Calibrates rewards by removing confounder effects.
     
-    Uses linear regression to estimate:
-        PnL = α + β₁ × market_return + β₂ × vix_change + ε
+    Instead of regressing the agent's non-stationary PnL, we regress the underlying asset's return:
+        asset_return = α + β × vix_change + ε
     
-    Causal reward = ε (the residual after removing confounder effects)
+    The causal reward is then the agent's position multiplied by the residual (ε):
+        causal_reward = position × (asset_return - β × vix_change)
     """
     
     def __init__(
@@ -36,12 +37,10 @@ class RewardCalibrator:
         self.update_frequency = update_frequency or config.calibrator.update_frequency
         
         # Buffers for history
-        self.rewards_buffer = deque(maxlen=self.lookback)
-        self.market_returns_buffer = deque(maxlen=self.lookback)
+        self.asset_returns_buffer = deque(maxlen=self.lookback)
         self.vix_changes_buffer = deque(maxlen=self.lookback)
         
         # Estimated coefficients
-        self.beta_market = 0.0
         self.beta_vix = 0.0
         self.alpha = 0.0
         
@@ -51,58 +50,53 @@ class RewardCalibrator:
         
     def add_observation(
         self, 
-        reward: float, 
-        market_return: float, 
+        asset_return: float, 
         vix_change: float
     ):
         """Add new observation to buffers."""
-        self.rewards_buffer.append(reward)
-        self.market_returns_buffer.append(market_return)
+        self.asset_returns_buffer.append(asset_return)
         self.vix_changes_buffer.append(vix_change)
         
         self.step_count += 1
         
         # Check if we should re-fit
         if (self.step_count % self.update_frequency == 0 and 
-            len(self.rewards_buffer) >= 20):  # Minimum samples
+            len(self.asset_returns_buffer) >= 20):  # Minimum samples
             self._fit()
     
     def _fit(self):
-        """Fit linear regression to estimate confounder effects."""
-        rewards = np.array(self.rewards_buffer)
-        market_returns = np.array(self.market_returns_buffer)
+        """Fit linear regression to estimate VIX confounder effect on the asset."""
+        asset_returns = np.array(self.asset_returns_buffer)
         vix_changes = np.array(self.vix_changes_buffer)
         
         # Handle NaN/Inf
         valid_mask = (
-            np.isfinite(rewards) & 
-            np.isfinite(market_returns) & 
+            np.isfinite(asset_returns) & 
             np.isfinite(vix_changes)
         )
         
         if valid_mask.sum() < 10:
             return  # Not enough valid data
         
-        rewards = rewards[valid_mask]
-        market_returns = market_returns[valid_mask]
+        asset_returns = asset_returns[valid_mask]
         vix_changes = vix_changes[valid_mask]
         
-        # Build design matrix [1, market_return, vix_change]
+        # Build design matrix [1, vix_change]
         X = np.column_stack([
-            np.ones(len(rewards)),
-            market_returns,
+            np.ones(len(asset_returns)),
             vix_changes
         ])
         
         # OLS: β = (X'X)^(-1) X'y
         try:
             XtX = X.T @ X
-            Xty = X.T @ rewards
-            betas = np.linalg.solve(XtX + 1e-6 * np.eye(3), Xty)  # Ridge for stability
+            Xty = X.T @ asset_returns
+            
+            # Simple Ridge for stability
+            betas = np.linalg.solve(XtX + 1e-6 * np.eye(2), Xty)
             
             self.alpha = betas[0]
-            self.beta_market = betas[1]
-            self.beta_vix = betas[2]
+            self.beta_vix = betas[1]
             self.fitted = True
             
         except np.linalg.LinAlgError:
@@ -111,31 +105,31 @@ class RewardCalibrator:
     
     def calibrate(
         self, 
-        reward: float, 
-        market_return: float, 
-        vix_change: float
+        position: float, 
+        asset_return: float, 
+        vix_change: float,
+        trade_cost: float
     ) -> float:
         """
-        Return calibrated (residualized) reward.
+        Return calibrated (residualized) reward based on agent's position.
         
-        causal_reward = reward - β_market × market_return - β_vix × vix_change
+        causal_reward = position * (asset_return - β_vix × vix_change) - trade_cost
         """
         if not self.fitted:
-            # Before fitting, return raw reward
-            return reward
+            # Before fitting, return raw PnL
+            return (position * asset_return) - trade_cost
         
         # Handle NaN in inputs
-        if not np.isfinite(market_return):
-            market_return = 0.0
+        if not np.isfinite(asset_return):
+            asset_return = 0.0
         if not np.isfinite(vix_change):
             vix_change = 0.0
         
-        adjustment = (
-            self.beta_market * market_return + 
-            self.beta_vix * vix_change
-        )
+        # Calculate isolated alpha (asset movement independent of VIX)
+        isolated_asset_return = asset_return - (self.beta_vix * vix_change)
         
-        causal_reward = reward - adjustment
+        # The agent's causal reward is capturing this isolated alpha, minus costs
+        causal_reward = (position * isolated_asset_return) - trade_cost
         
         return causal_reward
     
@@ -143,10 +137,9 @@ class RewardCalibrator:
         """Return current estimated coefficients."""
         return {
             'alpha': self.alpha,
-            'beta_market': self.beta_market,
             'beta_vix': self.beta_vix,
             'fitted': self.fitted,
-            'n_samples': len(self.rewards_buffer)
+            'n_samples': len(self.asset_returns_buffer)
         }
 
 
@@ -170,15 +163,33 @@ class CausalRewardWrapper(gym.Wrapper):
         """Execute step and calibrate reward."""
         obs, reward, terminated, truncated, info = self.env.step(action)
         
-        # Get confounders from info (set by TradingEnv)
+        # Extract necessary components to rebuild the True Asset Return logic
         market_return = info.get('market_return', 0.0)
         vix_change = info.get('vix_change', 0.0)
         
-        # Add to calibrator's history
-        self.calibrator.add_observation(reward, market_return, vix_change)
+        # Recover the agent's previous state
+        position = self.env.unwrapped.position
+        trade_cost = info.get('trade_cost', 0.0)  # We calculate this manually since the wrapper doesn't expose it perfectly
         
-        # Get calibrated reward
-        causal_reward = self.calibrator.calibrate(reward, market_return, vix_change)
+        # We need the previous position to figure out what the true trade cost was for this exact step
+        # Since env.step already updated the position, we deduce the actual cost by looking at the raw reward difference
+        if position != 0:
+            asset_return = (reward + 0.001) / position if abs(position) > 0.01 else market_return # rough approximation of cost and return
+        else:
+            asset_return = market_return # If agent was flat, asset return is just market return
+
+        # Fallback to the accurate market_return from the env for the asset (since SPY == market)
+        actual_asset_return = market_return 
+        
+        # We also need the trade cost. Reward = position * market_return - trade_cost
+        inferred_trade_cost = (position * actual_asset_return) - reward
+        if inferred_trade_cost < 0: inferred_trade_cost = 0 # Sanity check
+
+        # Add to calibrator's history (we only track the underlying asset against the confounder now)
+        self.calibrator.add_observation(actual_asset_return, vix_change)
+        
+        # Get calibrated reward using the agent's position
+        causal_reward = self.calibrator.calibrate(position, actual_asset_return, vix_change, inferred_trade_cost)
         
         # Store both rewards in info
         info['raw_reward'] = reward

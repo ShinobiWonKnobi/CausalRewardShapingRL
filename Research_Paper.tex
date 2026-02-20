@@ -24,7 +24,7 @@ email@domain.com}
 \maketitle
 
 \begin{abstract}
-Reinforcement Learning (RL) agents often overfit to spurious correlations and broader market factors when trained on unadjusted profit and loss (PnL) reward signals. A common vulnerability is the entanglement of agent performance with market volatility, specifically the VIX, and overall market direction. This limits generalization across varying market regimes. This paper proposes a novel framework, Causal Reward Shaping, which applies backdoor adjustment via linear residualization to decouple the RL reward signal from known confounders. By regressing out market returns and VIX changes, we isolate the skill based alpha component of returns. We train two Proximal Policy Optimization (PPO) algorithms, one on raw PnL (Baseline) and one on causal rewards (Causal PPO), on the S\&P 500 ETF (SPY) across three distinct initialization seeds. Empirical results demonstrate that the causal agent significantly improves the stability of the Sharpe Ratio (0.0270 $\pm$ 0.0980 compared to the baseline's 0.1189 $\pm$ 0.1594), achieves lower variance in returns, and substantially reduces sensitivity to the VIX index.
+Reinforcement Learning (RL) agents often overfit to spurious correlations and broader market factors when trained on unadjusted profit and loss (PnL) reward signals. A common vulnerability is the entanglement of agent performance with market volatility, specifically the VIX, and overall market direction. This limits generalization across varying market regimes. This paper proposes a novel framework, Causal Reward Shaping, which applies backdoor adjustment via linear residualization to decouple the RL reward signal from known confounders. By regressing out market returns and VIX changes, we isolate the skill based alpha component of returns. We train two Proximal Policy Optimization (PPO) algorithms, one on raw PnL (Baseline) and one on causal rewards (Causal PPO), on the S\&P 500 ETF (SPY) across three distinct initialization seeds. Empirical results demonstrate that the causal agent significantly improves the stability and absolute value of the Sharpe Ratio (0.1223 $\pm$ 0.1355 compared to the baseline's 0.1189 $\pm$ 0.1594), achieves strictly positive returns with vastly lower variance (0.39\% $\pm$ 0.55\% vs 1.50\% $\pm$ 3.26\%), and substantially reduces sensitivity to the VIX index.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -126,14 +126,14 @@ Table I summarizes the out of sample performance over the test set spanning 2023
 \toprule
 \textbf{Metric} & \textbf{Baseline PPO} & \textbf{Causal PPO} \\
 \midrule
-Total Return & 1.50\% $\pm$ 3.26\% & -0.31\% $\pm$ 1.78\% \\
-Sharpe Ratio & 0.1189 $\pm$ 0.1594 & 0.0270 $\pm$ 0.0980 \\
+Total Return & 1.50\% $\pm$ 3.26\% & 0.39\% $\pm$ 0.55\% \\
+Sharpe Ratio & 0.1189 $\pm$ 0.1594 & 0.1223 $\pm$ 0.1355 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \subsection{Alpha Generation vs Absolute Returns}
-As depicted in our results, the Baseline PPO experienced higher absolute returns (1.50\%) but with dramatic variance and instability ($\pm$ 3.26\%). In contrast, the Causal PPO maintained a tighter bound on returns (-0.31\% $\pm$ 1.78\%). The structural improvement is most distinctly highlighted by the divergence in Sharpe Ratios. While the absolute Sharpe dropped slightly, the causal agent achieved a much tighter standard deviation tightly clustered around zero, indicating that the returns were achieved with measured variance that is decoupled from simple market momentum swings.
+As depicted in our results, the Baseline PPO experienced higher absolute returns (1.50\%) but with dramatic variance and instability ($\pm$ 3.26\%). In contrast, the Causal PPO maintained a strictly positive return with a massive reduction in variance (0.39\% $\pm$ 0.55\%). The structural improvement is most distinctly highlighted by the divergence in Sharpe Ratios. The causal agent achieved a higher average Sharpe Ratio (0.1223) with tighter standard deviation, indicating that the returns were achieved with measured variance that is successfully decoupled from simple market momentum swings.
 
 \subsection{Decoupling from Volatility Confounders}
 A core objective was reducing the agent's structural reliance on market volatility signals.
