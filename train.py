@@ -62,6 +62,11 @@ def main(args):
     baseline_sharpes = []
     causal_sharpes = []
     
+    b_balances_all = []
+    c_balances_all = []
+    b_positions_all = []
+    c_positions_all = []
+    
     for seed in seeds:
         print(f"\n--- Running Seed {seed} ---")
         config.seed = seed
@@ -82,6 +87,11 @@ def main(args):
         causal_returns_list.append(c_met['total_return'])
         baseline_sharpes.append(b_met['sharpe_ratio'])
         causal_sharpes.append(c_met['sharpe_ratio'])
+        
+        b_balances_all.append(b_res['balances'][0])
+        c_balances_all.append(c_res['balances'][0])
+        b_positions_all.append(b_res['positions'][0])
+        c_positions_all.append(c_res['positions'][0])
 
     # Get final VIX sensitivity from the last run's metrics for simplicity
     test_vix_changes = splits['test']['vix_change'].values[1:]
@@ -108,28 +118,43 @@ def main(args):
     print(f"\nBaseline Sharpe: {b_sharpe_mean:.4f} ± {b_sharpe_std:.4f}")
     print(f"Causal Sharpe:   {c_sharpe_mean:.4f} ± {c_sharpe_std:.4f}")
     
+    results_dir = Path("results")
+    results_dir.mkdir(exist_ok=True)
+    
     # Plot equity curves
     if not args.no_plot:
         fig, axes = plt.subplots(2, 1, figsize=(12, 8))
         
         # Equity curves
         ax1 = axes[0]
-        ax1.plot(b_res['balances'][0], label='Baseline PPO (Seed 2026)', alpha=0.8)
-        ax1.plot(c_res['balances'][0], label='Causal PPO (Seed 2026)', alpha=0.8)
+        # Plot individual seeds lightly
+        for i in range(len(seeds)):
+            ax1.plot(b_balances_all[i], color='tab:blue', alpha=0.2)
+            ax1.plot(c_balances_all[i], color='tab:orange', alpha=0.2)
+            
+        # Plot mean
+        ax1.plot(np.mean(b_balances_all, axis=0), label='Baseline PPO (Mean)', color='tab:blue', linewidth=2)
+        ax1.plot(np.mean(c_balances_all, axis=0), label='Causal PPO (Mean)', color='tab:orange', linewidth=2)
+
         ax1.axhline(y=config.env.initial_balance, color='gray', linestyle='--', label='Initial')
         ax1.set_xlabel('Trading Days')
         ax1.set_ylabel('Portfolio Value ($)')
-        ax1.set_title('Equity Curves: Baseline vs Causal PPO')
+        ax1.set_title('Equity Curves: Baseline vs Causal PPO (3 Seeds)')
         ax1.legend()
         ax1.grid(True, alpha=0.3)
         
         # Positions
         ax2 = axes[1]
-        ax2.plot(b_res['positions'][0], label='Baseline', alpha=0.6)
-        ax2.plot(c_res['positions'][0], label='Causal', alpha=0.6)
+        for i in range(len(seeds)):
+            ax2.plot(b_positions_all[i], color='tab:blue', alpha=0.2)
+            ax2.plot(c_positions_all[i], color='tab:orange', alpha=0.2)
+            
+        ax2.plot(np.mean(b_positions_all, axis=0), label='Baseline (Mean)', color='tab:blue', linewidth=2)
+        ax2.plot(np.mean(c_positions_all, axis=0), label='Causal (Mean)', color='tab:orange', linewidth=2)
+        
         ax2.set_xlabel('Trading Days')
         ax2.set_ylabel('Position')
-        ax2.set_title('Position History (Seed 2026)')
+        ax2.set_title('Position History (3 Seeds)')
         ax2.legend()
         ax2.grid(True, alpha=0.3)
         
