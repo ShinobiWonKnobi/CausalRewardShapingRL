@@ -15,10 +15,13 @@
 
 \title{Causal Reward Shaping for Reinforcement Learning in Algorithmic Trading: Adjusting for Market Confounders and Regime Shifts}
 
-\author{\IEEEauthorblockN{Anonymous Author}
-\IEEEauthorblockA{\textit{Institution}\\
-City, Country \\
-email@domain.com}
+\author{\IEEEauthorblockN{Ayush Narania}
+\IEEEauthorblockA{\textit{SRM Institute of Science and Technology}\\
+an0235@srmist.edu.in}
+\and
+\IEEEauthorblockN{Mohommad Hamza Khan}
+\IEEEauthorblockA{\textit{SRM Institute of Science and Technology}\\
+mk8690@srmist.edu.in}
 }
 
 \maketitle
@@ -148,20 +151,20 @@ The negative correlation signifies the traditional market dynamic, an inverse mo
 This study demonstrates the viability of extracting causal alpha in Deep Reinforcement Learning for financial time series. By proactively calibrating the reward signal to filter out macro market returns and exogenous volatility shifts via moving OLS regression, the agent generalizes better on unseen data. Crucially, the causal paradigm led to a massive reduction in variance and risk profile across multiple varying initialization seeds, effectively stabilizing highly dynamic RL architectures against spurious correlations in trading.
 
 \begin{figure}[htbp]
-\centerline{\includegraphics[width=\linewidth]{equity_curves - Copy.png}}
+\centerline{\includegraphics[width=\linewidth]{equity_curves.png}}
 \caption{Portfolio Equity Curves: Baseline PPO vs Causal PPO on the SPY ETF Test Set (2023 to 2024). The Causal PPO avoids early drawdown and ends in positive territory.}
 \label{fig_equity}
 \end{figure}
 
 \begin{thebibliography}{00}
-\bibitem{b1} J. Pearl, \textit{Causality: Models, Reasoning, and Inference.} Cambridge University Press, 2009.
-\bibitem{b2} A. Y. Ng, D. Harada, and S. Russell, ``Policy Invariance Under Reward Transformations: Theory and Application to Reward Shaping,'' \textit{ICML}, 1999.
-\bibitem{b3} J. Schulman, F. Wolski, P. Dhariwal, A. Radford, and O. Klimov, ``Proximal Policy Optimization Algorithms,'' \textit{arXiv preprint arXiv:1707.06347}, 2017.
-\bibitem{b4} Y. Deng, F. Bao, Y. Kong, Z. Ren, and Q. Dai, ``Deep Direct Reinforcement Learning for Financial Signal Representation and Trading,'' \textit{IEEE Transactions on Neural Networks and Learning Systems}, vol. 28, no. 3, pp. 653-664, 2017.
-\bibitem{b5} T. M. Sutton and A. G. Barto, \textit{Reinforcement Learning: An Introduction.} MIT press, 2018.
-\bibitem{b6} P. W. Holland, ``Statistics and Causal Inference,'' \textit{Journal of the American Statistical Association}, vol. 81, no. 396, pp. 945-960, 1986.
-\bibitem{b7} M. Lopez de Prado, \textit{Advances in Financial Machine Learning.} John Wiley \& Sons, 2018.
-\bibitem{b8} V. Mnih et al., ``Human-level control through deep reinforcement learning,'' \textit{Nature}, vol. 518, no. 7540, pp. 529-533, 2015.
+\bibitem{b1} J. Pearl, \textit{Causality: Models, Reasoning, and Inference}, 2nd ed. Cambridge, U.K.: Cambridge Univ. Press, 2009.
+\bibitem{b2} A. Y. Ng, D. Harada, and S. Russell, ``Policy invariance under reward transformations: Theory and application to reward shaping,'' in \textit{Proc. 16th Int. Conf. Mach. Learn. (ICML)}, 1999, pp. 278--287.
+\bibitem{b3} J. Schulman, F. Wolski, P. Dhariwal, A. Radford, and O. Klimov, ``Proximal policy optimization algorithms,'' \textit{arXiv preprint arXiv:1707.06347}, 2017.
+\bibitem{b4} Y. Deng, F. Bao, Y. Kong, Z. Ren, and Q. Dai, ``Deep direct reinforcement learning for financial signal representation and trading,'' \textit{IEEE Trans. Neural Netw. Learn. Syst.}, vol. 28, no. 3, pp. 653--664, Mar. 2017.
+\bibitem{b5} R. S. Sutton and A. G. Barto, \textit{Reinforcement Learning: An Introduction}, 2nd ed. Cambridge, MA, USA: MIT Press, 2018.
+\bibitem{b6} P. W. Holland, ``Statistics and causal inference,'' \textit{J. Amer. Statist. Assoc.}, vol. 81, no. 396, pp. 945--960, 1986.
+\bibitem{b7} M. L\'opez de Prado, \textit{Advances in Financial Machine Learning}. Hoboken, NJ, USA: John Wiley \& Sons, 2018.
+\bibitem{b8} V. Mnih \textit{et al.}, ``Human-level control through deep reinforcement learning,'' \textit{Nature}, vol. 518, no. 7540, pp. 529--533, Feb. 2015.
 \end{thebibliography}
 
 \end{document}
